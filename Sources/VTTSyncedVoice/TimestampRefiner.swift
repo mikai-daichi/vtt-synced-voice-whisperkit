@@ -100,7 +100,9 @@ public enum TimestampRefiner {
             ))
         }
 
-        // end クランプ: 次エントリの start - minGapToNext を超えないようにする
+        // パス1: end クランプ — 次エントリの start - minGapToNext を超えないようにする。
+        // refined[i+1].startSeconds はここでは未クランプの値。パス2で startSeconds が変わっても
+        // end クランプの基準は「onset 補正後の start」であるべきなので、パス1を先に行う。
         for i in 0..<refined.count - 1 {
             let clampedEnd = refined[i + 1].startSeconds - config.minGapToNext
             if refined[i].endSeconds > clampedEnd {
@@ -112,7 +114,8 @@ public enum TimestampRefiner {
             }
         }
 
-        // start クランプ: paddingBefore で前エントリの end と重なった場合に最小インターバルを確保
+        // パス2: start クランプ — marginBefore で前エントリの end と重なった場合に最小インターバルを確保。
+        // パス1で更新済みの refined[i-1].endSeconds を参照するため、パス1の後に行う。
         for i in 1..<refined.count {
             let clampedStart = refined[i - 1].endSeconds + config.minGapToNext
             if refined[i].startSeconds < clampedStart {

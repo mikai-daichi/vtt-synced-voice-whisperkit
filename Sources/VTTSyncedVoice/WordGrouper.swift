@@ -27,7 +27,7 @@ enum WordGrouper {
                 let accumulatedText = currentWords.map(\.word).joined()
                 let endsWithSentence = sentenceEndCharacters.contains(word.word.last ?? " ")
                 let gapExceeds = gap >= gapThreshold
-                let tooLong = accumulatedText.count >= maxCharsPerEntry
+                let tooLong = accumulatedText.count > maxCharsPerEntry
 
                 shouldBreak = endsWithSentence || gapExceeds || tooLong
             }

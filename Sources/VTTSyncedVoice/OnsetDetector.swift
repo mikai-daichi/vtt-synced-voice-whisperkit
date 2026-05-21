@@ -72,6 +72,7 @@ enum OnsetDetector {
 
         if !ctcIsSilent {
             // フェーズ2a: 有音 → 前方スキャンで最初の無音フレームを探す → その先頭 = offset
+            // 無音が見つからない場合は searchEnd までの最終有音位置を offset とする。
             let searchEnd = min(audio.count, ctcSample + searchSamples)
             var pos = ctcSample
             var offsetSample = ctcSample
@@ -81,7 +82,7 @@ enum OnsetDetector {
                     offsetSample = pos
                     break
                 }
-                offsetSample = pos
+                offsetSample = pos  // 有音継続中: 無音が見つからなければ最終有音フレームの先頭が offset
             }
             let offsetSec = Double(offsetSample) / Double(sampleRate)
             return OffsetResult(offsetSec: offsetSec, debugNote: note(offsetSec))

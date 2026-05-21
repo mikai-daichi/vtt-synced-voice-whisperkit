@@ -1,8 +1,8 @@
-import Testing
-@testable import VTTSyncedVoice
-
-@Test func example() async throws {
-    // Write your test here and use APIs like `#expect(...)` to check expected conditions.
-    // Swift Testing Documentation
-    // https://developer.apple.com/documentation/testing
-}
+// VTTSyncedVoiceTests
+// 各モジュールのテストは以下のファイルに分割されています:
+//   SubtitleEntryTests.swift
+//   VTTWriterTests.swift
+//   AudioLoaderNormalizeTests.swift
+//   WordGrouperTests.swift
+//   OnsetDetectorTests.swift
+//   TimestampRefinerTests.swift
