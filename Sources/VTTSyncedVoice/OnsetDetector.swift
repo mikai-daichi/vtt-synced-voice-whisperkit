@@ -103,7 +103,7 @@ enum OnsetDetector {
     }
 
     /// - Parameters:
-    ///   - searchFrom: 前方スキャンの開始点（秒）。前エントリの endTime を渡すことで
+    ///   - searchFrom: 前方スキャンの開始点（秒）。前エントリの endSeconds を渡すことで
     ///                 前発話の残響・息継ぎをスキップできる。nil の場合は ctcStart から開始。
     static func detect(
         audio: [Float],

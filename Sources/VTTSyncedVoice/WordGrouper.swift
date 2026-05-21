@@ -46,8 +46,8 @@ enum WordGrouper {
         let text = words.map(\.word).joined()
         guard !text.trimmingCharacters(in: .whitespaces).isEmpty else { return nil }
         return SubtitleEntry(
-            startTime: Double(first.start),
-            endTime: Double(last.end),
+            startSeconds: Double(first.start),
+            endSeconds: Double(last.end),
             text: text
         )
     }

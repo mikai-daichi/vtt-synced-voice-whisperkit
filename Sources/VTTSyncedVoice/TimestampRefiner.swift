@@ -2,7 +2,7 @@ import Foundation
 import Accelerate
 
 /// Python版 transcriber.py の apply_onset_to_cues() に対応する処理。
-/// SubtitleEntry[] の startTime を音声波形の onset で補正する。
+/// SubtitleEntry[] の startSeconds を音声波形の onset で補正する。
 public enum TimestampRefiner {
 
     public struct Config {
@@ -60,12 +60,12 @@ public enum TimestampRefiner {
         var debugLog: [DebugEntry] = []
 
         for (i, entry) in entries.enumerated() {
-            // start 補正: 前エントリの endTime を searchFrom に渡して残響をスキップ
-            let prevEnd: Double? = i > 0 ? entries[i - 1].endTime : nil
+            // start 補正: 前エントリの endSeconds を searchFrom に渡して残響をスキップ
+            let prevEnd: Double? = i > 0 ? entries[i - 1].endSeconds : nil
             let onsetResult = OnsetDetector.detect(
                 audio: audio,
                 sampleRate: sampleRate,
-                ctcStart: entry.startTime,
+                ctcStart: entry.startSeconds,
                 searchFrom: prevEnd,
                 silenceThreshold: config.silenceThreshold
             )
@@ -75,25 +75,25 @@ public enum TimestampRefiner {
             let offsetResult = OnsetDetector.detectOffset(
                 audio: audio,
                 sampleRate: sampleRate,
-                ctcEnd: entry.endTime,
+                ctcEnd: entry.endSeconds,
                 silenceThreshold: config.silenceThreshold
             )
             let newEnd = offsetResult.offsetSec + config.marginAfter
 
             refined.append(SubtitleEntry(
-                startTime: newStart,
-                endTime: newEnd,
+                startSeconds: newStart,
+                endSeconds: newEnd,
                 text: entry.text
             ))
 
             debugLog.append(DebugEntry(
                 index: i,
                 text: entry.text,
-                ctcStart: entry.startTime,
+                ctcStart: entry.startSeconds,
                 onsetSec: onsetResult.onsetSec,
                 finalStart: newStart,
                 noteStart: onsetResult.debugNote,
-                ctcEnd: entry.endTime,
+                ctcEnd: entry.endSeconds,
                 offsetSec: offsetResult.offsetSec,
                 finalEnd: newEnd,
                 noteEnd: offsetResult.debugNote
@@ -102,11 +102,11 @@ public enum TimestampRefiner {
 
         // end クランプ: 次エントリの start - minGapToNext を超えないようにする
         for i in 0..<refined.count - 1 {
-            let clampedEnd = refined[i + 1].startTime - config.minGapToNext
-            if refined[i].endTime > clampedEnd {
+            let clampedEnd = refined[i + 1].startSeconds - config.minGapToNext
+            if refined[i].endSeconds > clampedEnd {
                 refined[i] = SubtitleEntry(
-                    startTime: refined[i].startTime,
-                    endTime: max(refined[i].startTime, clampedEnd),
+                    startSeconds: refined[i].startSeconds,
+                    endSeconds: max(refined[i].startSeconds, clampedEnd),
                     text: refined[i].text
                 )
             }
@@ -114,20 +114,20 @@ public enum TimestampRefiner {
 
         // start クランプ: paddingBefore で前エントリの end と重なった場合に最小インターバルを確保
         for i in 1..<refined.count {
-            let clampedStart = refined[i - 1].endTime + config.minGapToNext
-            if refined[i].startTime < clampedStart {
+            let clampedStart = refined[i - 1].endSeconds + config.minGapToNext
+            if refined[i].startSeconds < clampedStart {
                 refined[i] = SubtitleEntry(
-                    startTime: clampedStart,
-                    endTime: refined[i].endTime,
+                    startSeconds: clampedStart,
+                    endSeconds: refined[i].endSeconds,
                     text: refined[i].text
                 )
             }
         }
 
-        // 最後のエントリの endTime が無音領域にある場合、有音まで遡って修正する。
+        // 最後のエントリの endSeconds が無音領域にある場合、有音まで遡って修正する。
         // 幻聴によって CTC end が後ろに伸ばされた場合に detectOffset の searchSec 制限を超えることがある。
         if let lastIdx = refined.indices.last {
-            let lastEnd = refined[lastIdx].endTime
+            let lastEnd = refined[lastIdx].endSeconds
             let frameSize = max(1, Int(OnsetDetector.frameSec * Double(sampleRate)))
             let endSample = min(Int(lastEnd * Double(sampleRate)), audio.count - frameSize)
 
@@ -152,8 +152,8 @@ public enum TimestampRefiner {
                 let correctedEnd = Double(foundSample) / Double(sampleRate) + config.marginAfter
                 if correctedEnd < lastEnd {
                     refined[lastIdx] = SubtitleEntry(
-                        startTime: refined[lastIdx].startTime,
-                        endTime: correctedEnd,
+                        startSeconds: refined[lastIdx].startSeconds,
+                        endSeconds: correctedEnd,
                         text: refined[lastIdx].text
                     )
                     // debugLog の最終エントリも更新

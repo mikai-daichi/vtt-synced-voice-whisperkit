@@ -1,11 +1,11 @@
 public struct SubtitleEntry: Sendable, Equatable {
-    public let startTime: Double
-    public let endTime: Double
+    public let startSeconds: Double
+    public let endSeconds: Double
     public let text: String
 
-    public init(startTime: Double, endTime: Double, text: String) {
-        self.startTime = startTime
-        self.endTime = endTime
+    public init(startSeconds: Double, endSeconds: Double, text: String) {
+        self.startSeconds = startSeconds
+        self.endSeconds = endSeconds
         self.text = text
     }
 }

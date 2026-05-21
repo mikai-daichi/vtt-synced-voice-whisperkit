@@ -4,7 +4,7 @@ public enum VTTWriter {
     public static func write(entries: [SubtitleEntry]) -> String {
         var lines = ["WEBVTT", ""]
         for entry in entries {
-            lines.append("\(formatTime(entry.startTime)) --> \(formatTime(entry.endTime))")
+            lines.append("\(formatTime(entry.startSeconds)) --> \(formatTime(entry.endSeconds))")
             lines.append(entry.text)
             lines.append("")
         }
