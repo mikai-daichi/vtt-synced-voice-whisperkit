@@ -40,8 +40,8 @@ enum WordGrouper {
 
     private static func makeEntry(from words: [WordTiming]) -> SubtitleEntry? {
         guard let first = words.first, let last = words.last else { return nil }
-        let text = words.map(\.word).joined()
-        guard !text.trimmingCharacters(in: .whitespaces).isEmpty else { return nil }
+        let text = words.map(\.word).joined().trimmingCharacters(in: .whitespaces)
+        guard !text.isEmpty else { return nil }
         return SubtitleEntry(
             startSeconds: Double(first.start),
             endSeconds: Double(last.end),

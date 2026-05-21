@@ -221,6 +221,27 @@ struct TimestampRefinerTests {
         #expect(config.marginAfter == 0.2)
         #expect(config.silenceThreshold == 0.001)
         #expect(config.minGapToNext == 0.1)
+        #expect(config.minDuration == 0.1)
+    }
+
+    @Test("ゼロ長エントリはクランプ後もminDurationが保証される")
+    func zeroDurationEntryPreservesMinDuration() {
+        // 全区間有音: onset/offset 補正がゼロ長エントリを正しく広げられるか確認
+        let audio = synth(regions: [(silent: false, duration: 3.0)])
+        // start == end のゼロ長エントリ（WhisperKit由来を想定）
+        let entries = [
+            SubtitleEntry(startSeconds: 1.0, endSeconds: 1.0, text: "zero"),
+            SubtitleEntry(startSeconds: 2.0, endSeconds: 2.5, text: "next")
+        ]
+        let config = TimestampRefiner.Config(
+            marginBefore: 0.0, marginAfter: 0.0, silenceThreshold: 0.001,
+            minGapToNext: 0.1, minDuration: 0.1
+        )
+        let (result, _) = TimestampRefiner.refine(
+            entries: entries, audio: audio, sampleRate: sampleRate, config: config
+        )
+        #expect(result[0].endSeconds > result[0].startSeconds)
+        #expect(result[0].endSeconds - result[0].startSeconds >= config.minDuration - 1e-9)
     }
 
     @Test("DebugEntryにCTCの元の値が保存されている")

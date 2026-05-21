@@ -9,6 +9,7 @@ A Swift package that generates timestamped WebVTT subtitles from audio files usi
 - Word-level timestamps via WhisperKit (Whisper large-v3)
 - Waveform-based onset/offset correction for ±33ms (1 frame @ 30fps) accuracy
 - Hallucination filtering — removes phantom words generated beyond actual audio duration
+- Sentence-unit merging for Japanese (`--merge-sentences`) — merges phrase-split entries into natural sentence units using Japanese sentence-ending patterns (です/ます/etc.)
 - Outputs WebVTT string or `[SubtitleEntry]` array
 - Swift 6 concurrency (`Sendable`, actor-safe)
 - CLI tool included
@@ -72,6 +73,8 @@ config.phraseGapThreshold = 0.5            // silence gap to split phrases (defa
 config.marginBefore = 0.033               // shift subtitle start earlier from onset (default: 0.033s)
 config.marginAfter  = 0.2                 // extend subtitle end after offset (default: 0.2s)
 config.silenceThreshold = 0.001           // RMS threshold for silence detection (default: 0.001)
+config.mergeSentences = false              // merge entries into sentence units — Japanese only (default: false)
+config.punctuationHint = false             // hint WhisperKit to output punctuation — Japanese only (default: false)
 
 let analyzer = try await VTTSyncedVoice(configuration: config)
 ```
@@ -103,6 +106,8 @@ OPTIONS:
   --model <name>          WhisperKit model name (default: large-v3-v20240930_626MB)
   --margin-before <sec>   Shift subtitle start earlier from onset (default: 0.033)
   --margin-after <sec>    Extend subtitle end after offset (default: 0.2)
+  --merge-sentences       Merge entries into sentence units (Japanese only)
+  --punctuation-hint      Hint WhisperKit to output punctuation (Japanese only)
   --dump-words            Dump raw word timings from WhisperKit to stderr
   --verbose               Show onset/offset correction details per entry
   --dump-rms-at <sec>     Dump RMS values ±0.5s around specified time

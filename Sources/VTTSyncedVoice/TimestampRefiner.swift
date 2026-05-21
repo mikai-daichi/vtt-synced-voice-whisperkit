@@ -14,16 +14,20 @@ public enum TimestampRefiner {
         public var silenceThreshold: Float = 0.001
         /// 次エントリとの間に確保する最小無音時間（秒）
         public var minGapToNext: Double = 0.1
+        /// クランプ後に保証するエントリの最小表示時間（秒）。ゼロ長エントリを防ぐ。
+        public var minDuration: Double = 0.1
         public init(
             marginBefore: Double = 0.033,
             marginAfter: Double = 0.2,
             silenceThreshold: Float = 0.001,
-            minGapToNext: Double = 0.1
+            minGapToNext: Double = 0.1,
+            minDuration: Double = 0.1
         ) {
             self.marginBefore = marginBefore
             self.marginAfter = marginAfter
             self.silenceThreshold = silenceThreshold
             self.minGapToNext = minGapToNext
+            self.minDuration = minDuration
         }
     }
 
@@ -58,15 +62,18 @@ public enum TimestampRefiner {
 
         var refined: [SubtitleEntry] = []
         var debugLog: [DebugEntry] = []
+        // 直前エントリの offsetSec（marginAfter 加算前）を記録する。
+        // detect() の searchFrom に渡すことで前発話の残響をスキップしつつ
+        // marginAfter による過大な押し出しを防ぐ。
+        var prevOffsetSec: Double? = nil
 
         for (i, entry) in entries.enumerated() {
-            // start 補正: 前エントリの endSeconds を searchFrom に渡して残響をスキップ
-            let prevEnd: Double? = i > 0 ? entries[i - 1].endSeconds : nil
+            // start 補正: 前エントリの offsetSec（margin前）を searchFrom に渡して残響をスキップ
             let onsetResult = OnsetDetector.detect(
                 audio: audio,
                 sampleRate: sampleRate,
                 ctcStart: entry.startSeconds,
-                searchFrom: prevEnd,
+                searchFrom: prevOffsetSec,
                 silenceThreshold: config.silenceThreshold
             )
             let newStart = max(0.0, onsetResult.onsetSec - config.marginBefore)
@@ -79,6 +86,7 @@ public enum TimestampRefiner {
                 silenceThreshold: config.silenceThreshold
             )
             let newEnd = offsetResult.offsetSec + config.marginAfter
+            prevOffsetSec = offsetResult.offsetSec
 
             refined.append(SubtitleEntry(
                 startSeconds: newStart,
@@ -103,14 +111,28 @@ public enum TimestampRefiner {
         // パス1: end クランプ — 次エントリの start - minGapToNext を超えないようにする。
         // refined[i+1].startSeconds はここでは未クランプの値。パス2で startSeconds が変わっても
         // end クランプの基準は「onset 補正後の start」であるべきなので、パス1を先に行う。
+        // minDuration を下限として保証し、ゼロ長エントリになることを防ぐ。
+        // ゼロ長起源エントリ（元の ctcStart == ctcEnd）の end が次エントリの start より後になる場合、
+        // end を優先して次エントリの start を後ろへ逃がす。
         for i in 0..<refined.count - 1 {
             let clampedEnd = refined[i + 1].startSeconds - config.minGapToNext
             if refined[i].endSeconds > clampedEnd {
+                let minEnd = refined[i].startSeconds + config.minDuration
+                let resolvedEnd = max(minEnd, clampedEnd)
                 refined[i] = SubtitleEntry(
                     startSeconds: refined[i].startSeconds,
-                    endSeconds: max(refined[i].startSeconds, clampedEnd),
+                    endSeconds: resolvedEnd,
                     text: refined[i].text
                 )
+                // ゼロ長起源エントリで end が次の start を侵食する場合、次の start を後ろへ逃がす
+                let isZeroDurationOrigin = entries[i].startSeconds == entries[i].endSeconds
+                if isZeroDurationOrigin && resolvedEnd + config.minGapToNext > refined[i + 1].startSeconds {
+                    refined[i + 1] = SubtitleEntry(
+                        startSeconds: resolvedEnd + config.minGapToNext,
+                        endSeconds: refined[i + 1].endSeconds,
+                        text: refined[i + 1].text
+                    )
+                }
             }
         }
 

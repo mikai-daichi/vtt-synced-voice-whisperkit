@@ -14,6 +14,8 @@ public final class VTTSyncedVoice: Sendable {
         public var silenceThreshold: Float = 0.001
         /// true にすると WordGrouper の出力を句点単位でマージしてから TimestampRefiner に渡す
         public var mergeSentences: Bool = false
+        /// true にすると WhisperKit に句読点付与を促す promptTokens ヒントを渡す（効果は限定的）
+        public var punctuationHint: Bool = false
         public init() {}
     }
 
@@ -42,12 +44,17 @@ public final class VTTSyncedVoice: Sendable {
         onProgress: (@Sendable (Progress) -> Void)? = nil
     ) async throws -> [SubtitleEntry] {
         // WhisperKit でワードタイムスタンプを取得
-        let words = try await pipeline.process(audioURL: audioURL, onProgress: onProgress)
+        let words = try await pipeline.process(audioURL: audioURL, punctuationHint: configuration.punctuationHint, onProgress: onProgress)
 
         // ワードをフレーズ単位にグループ化
         onProgress?(.grouping)
         let grouped = WordGrouper.group(words: words, gapThreshold: configuration.phraseGapThreshold)
-        let phrased = configuration.mergeSentences ? EntryMerger.merge(entries: grouped) : grouped
+        let phrased: [SubtitleEntry]
+        if configuration.mergeSentences {
+            phrased = await EntryMerger.mergeWithAI(entries: grouped)
+        } else {
+            phrased = grouped
+        }
 
         // 波形レベルの onset 補正
         onProgress?(.refining)
@@ -72,11 +79,16 @@ public final class VTTSyncedVoice: Sendable {
         audioURL: URL,
         onProgress: (@Sendable (Progress) -> Void)? = nil
     ) async throws -> (entries: [SubtitleEntry], debug: [TimestampRefiner.DebugEntry]) {
-        let words = try await pipeline.process(audioURL: audioURL, onProgress: onProgress)
+        let words = try await pipeline.process(audioURL: audioURL, punctuationHint: configuration.punctuationHint, onProgress: onProgress)
 
         onProgress?(.grouping)
         let grouped = WordGrouper.group(words: words, gapThreshold: configuration.phraseGapThreshold)
-        let phrased = configuration.mergeSentences ? EntryMerger.merge(entries: grouped) : grouped
+        let phrased: [SubtitleEntry]
+        if configuration.mergeSentences {
+            phrased = await EntryMerger.mergeWithAI(entries: grouped)
+        } else {
+            phrased = grouped
+        }
 
         onProgress?(.refining)
         let audio = try AudioLoader.loadNormalized(url: audioURL)

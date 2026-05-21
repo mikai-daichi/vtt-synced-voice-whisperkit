@@ -25,6 +25,7 @@ final class SpeechPipeline: Sendable {
 
     func process(
         audioURL: URL,
+        punctuationHint: Bool = false,
         onProgress: (@Sendable (VTTSyncedVoice.Progress) -> Void)? = nil
     ) async throws -> [WordTiming] {
         onProgress?(.transcribing)
@@ -32,6 +33,14 @@ final class SpeechPipeline: Sendable {
         var options = DecodingOptions()
         options.wordTimestamps = true
         options.language = language
+
+        // 句読点付与を促すヒント: 直前セグメントが句点で終わったように見せる
+        if punctuationHint, let tokenizer = whisperKit.tokenizer {
+            let ids = tokenizer.encode(text: "。")
+            if !ids.isEmpty {
+                options.promptTokens = ids
+            }
+        }
 
         let results = try await whisperKit.transcribe(
             audioPath: audioURL.path,

@@ -141,7 +141,9 @@ enum OnsetDetector {
 
         if !ctcIsSilent {
             // フェーズ2a: 有音 → 逆方向スキャンで最初の無音フレームを探す
-            let searchStart = max(0, ctcSample - searchSamples)
+            // searchFrom が指定されている場合はそれより前には遡らない（前エントリの発話区間への侵食を防ぐ）
+            let searchFromSample = searchFrom.map { Int($0 * Double(sampleRate)) }
+            let searchStart = max(searchFromSample ?? 0, max(0, ctcSample - searchSamples))
             var pos = ctcSample
             var onsetSample = ctcSample
             while pos - frameSize >= searchStart {

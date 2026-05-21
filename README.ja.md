@@ -7,6 +7,7 @@
 - WhisperKit によるワード単位タイムスタンプ（Whisper large-v3）
 - 波形レベルの onset/offset 補正で ±33ms（30fps 換算 1 フレーム）精度
 - 幻聴フィルタ — 音声ファイルの長さを超えて生成された幻聴ワードを除去
+- 日本語向け文章単位マージ（`--merge-sentences`）— フレーズ分割されたエントリを「です／ます」などの文末パターンで文章単位にまとめる（**日本語専用**）
 - WebVTT 文字列または `[SubtitleEntry]` 配列で出力
 - Swift 6 並行処理対応（`Sendable`、actor セーフ）
 - CLI ツール同梱
@@ -70,6 +71,8 @@ config.phraseGapThreshold = 0.5            // フレーズ分割の無音閾値�
 config.marginBefore = 0.033               // onset から開始時刻を早める余白（デフォルト: 0.033 秒）
 config.marginAfter  = 0.2                 // offset から終了時刻を延ばす余白（デフォルト: 0.2 秒）
 config.silenceThreshold = 0.001           // 無音判定の RMS 閾値（デフォルト: 0.001）
+config.mergeSentences = false              // 文章単位マージ — 日本語専用（デフォルト: false）
+config.punctuationHint = false             // 句読点出力ヒント — 日本語専用（デフォルト: false）
 
 let analyzer = try await VTTSyncedVoice(configuration: config)
 ```
@@ -101,6 +104,8 @@ OPTIONS:
   --model <name>          WhisperKit モデル名（デフォルト: large-v3-v20240930_626MB）
   --margin-before <sec>   onset から開始時刻を早める余白（デフォルト: 0.033 秒）
   --margin-after <sec>    offset から終了時刻を延ばす余白（デフォルト: 0.2 秒）
+  --merge-sentences       文章単位でエントリをマージ（日本語専用）
+  --punctuation-hint      句読点出力を WhisperKit にヒント（日本語専用）
   --dump-words            WhisperKit の生ワードタイムスタンプを stderr に出力
   --verbose               エントリごとの onset/offset 補正詳細を表示
   --dump-rms-at <sec>     指定時刻 ±0.5 秒の RMS 値をダンプ（波形調査用）

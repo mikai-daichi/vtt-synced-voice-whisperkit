@@ -33,6 +33,9 @@ struct VTTSyncedVoiceCLI: ParsableCommand {
     @Flag(name: .long, help: "Merge phrase entries into sentence units (split on 。！？!?)")
     var mergeSentences: Bool = false
 
+    @Flag(name: .long, help: "Pass punctuation hint tokens to WhisperKit to encourage punctuation output (limited effect)")
+    var punctuationHint: Bool = false
+
     @Option(name: .long, help: "Dump RMS values around a specific time (seconds) for waveform investigation")
     var dumpRmsAt: Double?
 
@@ -50,6 +53,7 @@ struct VTTSyncedVoiceCLI: ParsableCommand {
         config.marginBefore = marginBefore
         config.marginAfter = marginAfter
         config.mergeSentences = mergeSentences
+        config.punctuationHint = punctuationHint
 
         let audioURL = URL(fileURLWithPath: audioFile)
         let outputPath = output

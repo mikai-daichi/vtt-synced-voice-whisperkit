@@ -24,6 +24,7 @@ let package = Package(
         .target(
             name: "VTTSyncedVoice",
             dependencies: [
+                
                 .product(name: "WhisperKit", package: "argmax-oss-swift")
             ]
         ),
