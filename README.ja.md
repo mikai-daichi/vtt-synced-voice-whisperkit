@@ -104,6 +104,7 @@ OPTIONS:
   --model <name>          WhisperKit モデル名（デフォルト: large-v3-v20240930_626MB）
   --margin-before <sec>   onset から開始時刻を早める余白（デフォルト: 0.033 秒）
   --margin-after <sec>    offset から終了時刻を延ばす余白（デフォルト: 0.2 秒）
+  --replace-list <path>   置換ルールを記述したCSVファイルのパス（1行1ルール: 置換前,置換後）
   --merge-sentences       文章単位でエントリをマージ（日本語専用）
   --punctuation-hint      句読点出力を WhisperKit にヒント（日本語専用）
   --dump-words            WhisperKit の生ワードタイムスタンプを stderr に出力
@@ -137,6 +138,7 @@ OPTIONS:
 
 - **`swift run` または Xcode を使用**：WhisperKit はモデルを実行時にダウンロードするため、`swift run` で動作します。`swift build` で生成したバイナリは実行ディレクトリによってモデルの検索に失敗する場合があります。
 - **Command Line Tools の設定**：Xcode → Settings → Locations → Command Line Tools が正しい Xcode バージョンを指していることを確認してください。設定が誤っていると `MLX error: Failed to load the default metallib` が発生します。
+- **置換リスト CSV フォーマット**: 1行1ルール、`置換前,置換後` の形式。空行と `#` 始まりの行はコメントとして無視されます。置換後文字列にカンマが含まれる場合は最初のカンマを区切りとして使用します（`a,b,c` は `a` を `b,c` に置換）。BOM 付き UTF-8 も対応しています。
 - **繰り返し発話**：WhisperKit（および Whisper ベースのモデル全般）は、同じフレーズの繰り返しをスキップまたは折りたたむことがあります。これは Whisper アーキテクチャの既知の制限事項です。
 
 ## ライセンス

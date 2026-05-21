@@ -45,6 +45,9 @@ struct VTTSyncedVoiceCLI: ParsableCommand {
     @Option(name: .long, help: "Seconds to extend subtitle end later (default: 0.2)")
     var marginAfter: Double = 0.2
 
+    @Option(name: .long, help: "Path to CSV file with replacement rules (from,to per line)")
+    var replaceList: String?
+
     mutating func run() throws {
         var config = VTTSyncedVoice.Configuration()
         config.language = language
@@ -61,8 +64,15 @@ struct VTTSyncedVoiceCLI: ParsableCommand {
         let shouldDumpWords = dumpWords
         let isVerbose = verbose
         let dumpRmsAtTime = dumpRmsAt
+        let replaceListPath = replaceList
 
         try runAsync {
+            func applyReplacement(_ entries: [SubtitleEntry]) throws -> [SubtitleEntry] {
+                guard let path = replaceListPath else { return entries }
+                let rules = try TextReplacer.loadCSV(url: URL(fileURLWithPath: path))
+                return TextReplacer.apply(rules: rules, to: entries)
+            }
+
             // --dump-rms-at: Whisperモデル不要、波形だけ読んで終了
             if let targetSec = dumpRmsAtTime {
                 let audio = try AudioLoader.loadNormalized(url: audioURL)
@@ -117,7 +127,8 @@ struct VTTSyncedVoiceCLI: ParsableCommand {
                         d.ctcEnd, d.offsetSec, d.finalEnd, d.noteEnd,
                         String(d.text.prefix(15))), stderr)
                 }
-                let vtt = VTTWriter.write(entries: entries)
+                let replaced = try applyReplacement(entries)
+                let vtt = VTTWriter.write(entries: replaced)
                 if let path = outputPath {
                     try vtt.write(to: URL(fileURLWithPath: path), atomically: true, encoding: .utf8)
                 } else {
@@ -126,7 +137,7 @@ struct VTTSyncedVoiceCLI: ParsableCommand {
                 return
             }
 
-            let vtt = try await analyzer.generateVTT(audioURL: audioURL) { progress in
+            let rawEntries = try await analyzer.analyze(audioURL: audioURL) { progress in
                 switch progress {
                 case .loadingModels:
                     fputs("Loading models...\n", stderr)
@@ -142,6 +153,8 @@ struct VTTSyncedVoiceCLI: ParsableCommand {
                     fputs("Done: \(count) entries\n", stderr)
                 }
             }
+            let replaced = try applyReplacement(rawEntries)
+            let vtt = VTTWriter.write(entries: replaced)
             if let path = outputPath {
                 try vtt.write(to: URL(fileURLWithPath: path), atomically: true, encoding: .utf8)
             } else {

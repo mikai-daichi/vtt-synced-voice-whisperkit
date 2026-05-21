@@ -106,6 +106,7 @@ OPTIONS:
   --model <name>          WhisperKit model name (default: large-v3-v20240930_626MB)
   --margin-before <sec>   Shift subtitle start earlier from onset (default: 0.033)
   --margin-after <sec>    Extend subtitle end after offset (default: 0.2)
+  --replace-list <path>   Path to CSV file with replacement rules (from,to per line)
   --merge-sentences       Merge entries into sentence units (Japanese only)
   --punctuation-hint      Hint WhisperKit to output punctuation (Japanese only)
   --dump-words            Dump raw word timings from WhisperKit to stderr
@@ -140,6 +141,7 @@ The model is downloaded from Hugging Face on first run (~626 MB for large-v3).
 - **Use `swift run` or Xcode, not `swift build`**: The CLI works with `swift run` because WhisperKit downloads its models at runtime. A bare `swift build` binary may fail to locate models depending on the working directory.
 - **First run**: The Whisper model (~626 MB) is downloaded from Hugging Face automatically. Subsequent runs use the cached model.
 - **Xcode Command Line Tools**: Make sure Xcode → Settings → Locations → Command Line Tools points to the correct Xcode version. A misconfigured setting causes `MLX error: Failed to load the default metallib`.
+- **Replacement list CSV format**: One rule per line, `from,to`. Blank lines and lines starting with `#` are treated as comments. If the replacement value itself contains a comma, only the first comma is used as the delimiter (`a,b,c` replaces `a` with `b,c`). BOM-prefixed UTF-8 is also supported.
 - **Repeated speech**: WhisperKit (like all Whisper-based models) may skip or collapse repeated phrases. This is a known limitation of the Whisper architecture.
 
 ## License
