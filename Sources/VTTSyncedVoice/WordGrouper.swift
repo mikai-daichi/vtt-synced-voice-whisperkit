@@ -4,7 +4,6 @@ import WhisperKit
 enum WordGrouper {
 
     static let sentenceEndCharacters: Set<Character> = ["。", "？", "！", ".", "?", "!"]
-    static let maxCharsPerEntry = 40
 
     static func group(
         words: [WordTiming],
@@ -24,12 +23,10 @@ enum WordGrouper {
             } else {
                 let next = words[i + 1]
                 let gap = Double(next.start - word.end)
-                let accumulatedText = currentWords.map(\.word).joined()
                 let endsWithSentence = sentenceEndCharacters.contains(word.word.last ?? " ")
                 let gapExceeds = gap >= gapThreshold
-                let tooLong = accumulatedText.count > maxCharsPerEntry
 
-                shouldBreak = endsWithSentence || gapExceeds || tooLong
+                shouldBreak = endsWithSentence || gapExceeds
             }
 
             if shouldBreak, let entry = makeEntry(from: currentWords) {

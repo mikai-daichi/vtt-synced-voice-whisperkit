@@ -12,6 +12,8 @@ public final class VTTSyncedVoice: Sendable {
         public var marginAfter: Double = 0.2
         /// 無音判定のRMS閾値（ピーク正規化後）
         public var silenceThreshold: Float = 0.001
+        /// true にすると WordGrouper の出力を句点単位でマージしてから TimestampRefiner に渡す
+        public var mergeSentences: Bool = false
         public init() {}
     }
 
@@ -45,6 +47,7 @@ public final class VTTSyncedVoice: Sendable {
         // ワードをフレーズ単位にグループ化
         onProgress?(.grouping)
         let grouped = WordGrouper.group(words: words, gapThreshold: configuration.phraseGapThreshold)
+        let phrased = configuration.mergeSentences ? EntryMerger.merge(entries: grouped) : grouped
 
         // 波形レベルの onset 補正
         onProgress?(.refining)
@@ -55,7 +58,7 @@ public final class VTTSyncedVoice: Sendable {
             silenceThreshold: configuration.silenceThreshold
         )
         let (entries, _) = TimestampRefiner.refine(
-            entries: grouped,
+            entries: phrased,
             audio: audio,
             config: refinerConfig
         )
@@ -73,6 +76,7 @@ public final class VTTSyncedVoice: Sendable {
 
         onProgress?(.grouping)
         let grouped = WordGrouper.group(words: words, gapThreshold: configuration.phraseGapThreshold)
+        let phrased = configuration.mergeSentences ? EntryMerger.merge(entries: grouped) : grouped
 
         onProgress?(.refining)
         let audio = try AudioLoader.loadNormalized(url: audioURL)
@@ -82,7 +86,7 @@ public final class VTTSyncedVoice: Sendable {
             silenceThreshold: configuration.silenceThreshold
         )
         let (entries, debug) = TimestampRefiner.refine(
-            entries: grouped,
+            entries: phrased,
             audio: audio,
             config: refinerConfig
         )

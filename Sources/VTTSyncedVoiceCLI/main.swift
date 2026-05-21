@@ -30,6 +30,9 @@ struct VTTSyncedVoiceCLI: ParsableCommand {
     @Flag(name: .long, help: "Show onset correction details for each entry")
     var verbose: Bool = false
 
+    @Flag(name: .long, help: "Merge phrase entries into sentence units (split on 。！？!?)")
+    var mergeSentences: Bool = false
+
     @Option(name: .long, help: "Dump RMS values around a specific time (seconds) for waveform investigation")
     var dumpRmsAt: Double?
 
@@ -46,6 +49,7 @@ struct VTTSyncedVoiceCLI: ParsableCommand {
         config.model = model
         config.marginBefore = marginBefore
         config.marginAfter = marginAfter
+        config.mergeSentences = mergeSentences
 
         let audioURL = URL(fileURLWithPath: audioFile)
         let outputPath = output

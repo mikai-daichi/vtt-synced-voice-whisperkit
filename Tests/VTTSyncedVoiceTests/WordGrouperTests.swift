@@ -84,41 +84,15 @@ struct WordGrouperTests {
         }
     }
 
-    @Test("maxCharsPerEntry(40)を超えると分割される")
-    func splitOnMaxChars() {
-        let longText = String(repeating: "あ", count: 41)
+    @Test("文字数がいくら長くても文字数では分割されない")
+    func longTextNotSplit() {
+        let longText = String(repeating: "あ", count: 100)
         let words = [
             word(longText, start: 0.0, end: 1.0),
             word("次", start: 1.05, end: 1.5)
         ]
         let result = WordGrouper.group(words: words, gapThreshold: 2.0)
-        #expect(result.count == 2)
-    }
-
-    @Test("40文字ちょうどでは分割されない（maxCharsPerEntry の境界値）")
-    func boundaryMaxChars() {
-        // tooLong = accumulatedText.count > 40 なので、40文字では分割されない
-        let text40 = String(repeating: "A", count: 40)
-        let words = [
-            word(text40, start: 0.0, end: 1.0),
-            word("Z", start: 1.05, end: 1.5)
-        ]
-        let result = WordGrouper.group(words: words, gapThreshold: 2.0)
         #expect(result.count == 1)
-        #expect(result[0].text.count == 41)
-    }
-
-    @Test("41文字で分割される（maxCharsPerEntry + 1 の境界値）")
-    func overMaxChars() {
-        // tooLong = accumulatedText.count > 40 なので、41文字で分割される
-        let text41 = String(repeating: "A", count: 41)
-        let words = [
-            word(text41, start: 0.0, end: 1.0),
-            word("Z", start: 1.05, end: 1.5)
-        ]
-        let result = WordGrouper.group(words: words, gapThreshold: 2.0)
-        #expect(result.count == 2)
-        #expect(result[0].text.count == 41)
     }
 
     @Test("エントリのstartは最初の単語のstart、endは最後の単語のend")
