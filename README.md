@@ -83,7 +83,7 @@ Clone the repository and run from its root:
 ```bash
 git clone https://github.com/mikai-daichi/vtt-synced-voice-whisperkit.git
 cd vtt-synced-voice-whisperkit
-swift run -c release vtt-synced-voice audio.m4a --language ja --output subtitles.vtt
+swift run -c release vtt-synced-voice AudioFiles/audio.m4a --language ja --output VttFiles/subtitles.vtt
 ```
 
 The Whisper model is downloaded automatically on first run (~626 MB for large-v3).

@@ -81,7 +81,7 @@ let analyzer = try await VTTSyncedVoice(configuration: config)
 ```bash
 git clone https://github.com/mikai-daichi/vtt-synced-voice-whisperkit.git
 cd vtt-synced-voice-whisperkit
-swift run -c release vtt-synced-voice audio.m4a --language ja --output subtitles.vtt
+swift run -c release vtt-synced-voice AudioFiles/audio.m4a --language ja --output VttFiles/subtitles.vtt
 ```
 
 初回実行時に Whisper モデルが自動ダウンロードされます（large-v3 は約 626 MB）。
