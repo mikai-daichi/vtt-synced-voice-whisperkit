@@ -75,6 +75,7 @@ config.marginAfter  = 0.2                 // extend subtitle end after offset (d
 config.silenceThreshold = 0.001           // RMS threshold for silence detection (default: 0.001)
 config.mergeSentences = false              // merge entries into sentence units — Japanese only (default: false)
 config.punctuationHint = false             // hint WhisperKit to output punctuation — Japanese only (default: false)
+config.replacementRules = try TextReplacer.loadCSV(url: URL(fileURLWithPath: "replace.csv"))  // text replacement rules (default: [])
 
 let analyzer = try await VTTSyncedVoice(configuration: config)
 ```

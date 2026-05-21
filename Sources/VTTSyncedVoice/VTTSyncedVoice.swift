@@ -16,6 +16,8 @@ public final class VTTSyncedVoice: Sendable {
         public var mergeSentences: Bool = false
         /// true にすると WhisperKit に句読点付与を促す promptTokens ヒントを渡す（効果は限定的）
         public var punctuationHint: Bool = false
+        /// 出力前にテキストに適用する置換ルール。TextReplacer.loadCSV() で生成した配列を渡す。
+        public var replacementRules: [TextReplacer.Rule] = []
         public init() {}
     }
 
@@ -64,12 +66,13 @@ public final class VTTSyncedVoice: Sendable {
             marginAfter: configuration.marginAfter,
             silenceThreshold: configuration.silenceThreshold
         )
-        let (entries, _) = TimestampRefiner.refine(
+        let (rawEntries, _) = TimestampRefiner.refine(
             entries: phrased,
             audio: audio,
             config: refinerConfig
         )
 
+        let entries = TextReplacer.apply(rules: configuration.replacementRules, to: rawEntries)
         onProgress?(.completed(entryCount: entries.count))
         return entries
     }
@@ -97,12 +100,13 @@ public final class VTTSyncedVoice: Sendable {
             marginAfter: configuration.marginAfter,
             silenceThreshold: configuration.silenceThreshold
         )
-        let (entries, debug) = TimestampRefiner.refine(
+        let (rawEntries, debug) = TimestampRefiner.refine(
             entries: phrased,
             audio: audio,
             config: refinerConfig
         )
 
+        let entries = TextReplacer.apply(rules: configuration.replacementRules, to: rawEntries)
         onProgress?(.completed(entryCount: entries.count))
         return (entries, debug)
     }

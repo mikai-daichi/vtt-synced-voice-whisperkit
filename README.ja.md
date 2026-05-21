@@ -73,6 +73,7 @@ config.marginAfter  = 0.2                 // offset から終了時刻を延ば�
 config.silenceThreshold = 0.001           // 無音判定の RMS 閾値（デフォルト: 0.001）
 config.mergeSentences = false              // 文章単位マージ — 日本語専用（デフォルト: false）
 config.punctuationHint = false             // 句読点出力ヒント — 日本語専用（デフォルト: false）
+config.replacementRules = try TextReplacer.loadCSV(url: URL(fileURLWithPath: "replace.csv"))  // テキスト置換ルール（デフォルト: []）
 
 let analyzer = try await VTTSyncedVoice(configuration: config)
 ```

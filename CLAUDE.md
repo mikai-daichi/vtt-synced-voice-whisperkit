@@ -341,6 +341,24 @@ python3 Examples/compare_vtt.py VttFiles/test_audio_no_merge.vtt result.vtt
 
 ---
 
+## バージョン管理
+
+Swift Package Manager ではバージョンは **git タグ** で管理する。`Package.swift` にバージョン番号を書く場所はない。
+
+```bash
+# バージョンタグを付けてプッシュ
+git tag 0.1.0
+git push origin 0.1.0
+```
+
+利用者が `Package.swift` に書く `.package(url: "...", from: "0.1.0")` はこのタグを参照する。
+
+- バージョニングは **semver**（MAJOR.MINOR.PATCH）に従う
+  - 破壊的変更 → MAJOR、機能追加 → MINOR、バグ修正 → PATCH
+- 公開前・開発中は `0.x.x` を使う
+
+---
+
 ## 署名・配布情報
 
 - **GitHub:** https://github.com/mikai-daichi/vtt-synced-voice-whisperkit
